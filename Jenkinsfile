@@ -9,13 +9,13 @@ pipeline {
 
     agent any
 
-
     stages {
-        stage('checkout') {
+        stage('Checkout') {
             steps {
+                echo 'Checking out code...'
                 script {
                     dir("terraform") {
-                        git "https://github.com/soodrajesh/ci-cd-project-1.git"
+                        checkout scm
                     }
                 }
             }
@@ -23,9 +23,10 @@ pipeline {
 
         stage('Plan') {
             steps {
-                sh 'pwd;cd terraform/ ; terraform init'
-                sh "pwd;cd terraform/ ; terraform plan -out tfplan"
-                sh 'pwd;cd terraform/ ; terraform show -no-color tfplan > tfplan.txt'
+                echo 'Running Terraform init and plan...'
+                script {
+                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan > tfplan.txt'
+                }
             }
         }
 
@@ -37,6 +38,7 @@ pipeline {
             }
 
             steps {
+                echo 'Waiting for approval...'
                 script {
                     def plan = readFile 'terraform/tfplan.txt'
                     input message: "Do you want to apply the plan?",
@@ -47,7 +49,10 @@ pipeline {
 
         stage('Apply') {
             steps {
-                sh "pwd;cd terraform/ ; terraform apply -input=false tfplan"
+                echo 'Applying Terraform changes...'
+                script {
+                    sh 'cd terraform; terraform apply -input=false tfplan'
+                }
             }
         }
     }
