@@ -3,8 +3,8 @@ pipeline {
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
     } 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID').toString()
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY').toString()
     }
 
     agent any
@@ -25,7 +25,7 @@ pipeline {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd terraform; terraform init; terraform plan'
+                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
                 }
             }
         }
@@ -40,9 +40,9 @@ pipeline {
             steps {
                 echo 'Waiting for approval...'
                 script {
-                    input message: 'Do you want to apply the plan?',
-                          ok: 'Proceed',
-                          parameters: [booleanParam(defaultValue: false, description: 'Apply the plan?', name: 'APPLY_PLAN')]
+                    def plan = readFile 'terraform/tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                          parameters: [booleanParam(name: 'APPLY_PLAN', defaultValue: false, description: 'Proceed with applying the plan?')]
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                 echo 'Applying Terraform changes...'
                 script {
                     if (params.APPLY_PLAN) {
-                        sh 'cd terraform; terraform apply -input=false'
+                        sh 'cd terraform; terraform apply -input=false tfplan'
                     } else {
                         echo 'User chose not to apply the plan. Exiting...'
                     }
