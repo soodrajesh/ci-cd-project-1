@@ -1,68 +1,63 @@
 pipeline {
-    agent any
-
+    parameters {
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+    } 
     environment {
-        TF_WORKING_DIR = 'terraform'
-        TF_PLAN_FILE = "${TF_WORKING_DIR}/tfplan"
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID').toString()
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID').toString()
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY').toString()
+        TF_WORKING_DIR        = 'terraform'
     }
+
+    agent any
 
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code...'
-                checkout scm
+                script {
+                    checkout scm
+                }
             }
         }
 
-        stage('Terraform Init and Plan') {
-            when {
-                expression { 
-                    return env.BRANCH_NAME == 'develop' || env.BRANCH_NAME ==~ /^jira-\d+$/ 
-                }
-            }
+        stage('Plan') {
             steps {
                 echo 'Running Terraform init and plan...'
-                dir(TF_WORKING_DIR) {
-                    script {
+                script {
+                    dir(TF_WORKING_DIR) {
                         sh 'terraform init'
-                        sh 'terraform plan -out tfplan'
-                        sh 'terraform show -no-color tfplan'
+                        sh 'terraform plan -out=tfplan'
                     }
                 }
             }
         }
 
-        
-        stage('Manual Approval for Merge') {
+        stage('Approval') {
             when {
-                expression { 
-                    return env.BRANCH_NAME == 'develop' || env.BRANCH_NAME ==~ /^jira-\d+$/ 
+                not {
+                    equals expected: true, actual: params.autoApprove
                 }
             }
+
             steps {
-                echo 'Waiting for manual approval...'
-                input message: "Do you want to merge the code?",
-                      parameters: [booleanParam(name: 'MERGE_APPROVAL', defaultValue: false, description: 'Proceed with merging the code?')]
+                echo 'Waiting for approval...'
+                script {
+                    input message: "Do you want to apply the plan?",
+                          parameters: [booleanParam(name: 'APPLY_PLAN', defaultValue: false, description: 'Proceed with applying the plan?')]
+                }
             }
         }
 
-        stage('Terraform Apply') {
-            when {
-                expression { 
-                    return env.BRANCH_NAME == 'develop' || env.BRANCH_NAME ==~ /^jira-\d+$/ 
-                }
-            }
+        stage('Apply') {
             steps {
                 echo 'Applying Terraform changes...'
-                dir(TF_WORKING_DIR) {
-                    script {
-                        if (params.MERGE_APPROVAL) {
-                            sh 'terraform apply -auto-approve tfplan'
-                        } else {
-                            echo 'User chose not to apply the plan. Exiting...'
+                script {
+                    if (params.APPLY_PLAN) {
+                        dir(TF_WORKING_DIR) {
+                            sh 'terraform apply -input=false tfplan'
                         }
+                    } else {
+                        echo 'User chose not to apply the plan. Exiting...'
                     }
                 }
             }
