@@ -3,7 +3,8 @@ pipeline {
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
     } 
     environment {
-        AWS_PROFILE = 'rsood' // Set your AWS named profile here
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID').toString()
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY').toString()
     }
 
     agent any
@@ -50,7 +51,7 @@ pipeline {
             steps {
                 echo 'Applying Terraform changes...'
                 script {
-                    sh 'cd terraform; AWS_PROFILE=$AWS_PROFILE terraform apply -input=false tfplan'
+                    sh 'cd terraform; terraform apply -input=false tfplan'
                 }
             }
         }
