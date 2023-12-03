@@ -10,6 +10,16 @@ pipeline {
     agent any
 
     stages {
+        stage('Set AWS Profile') {
+            steps {
+                script {
+                    // Set AWS_PROFILE environment variable
+                    sh 'export AWS_PROFILE=rsood'
+                }
+            }
+        }
+        
+    stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code...'
