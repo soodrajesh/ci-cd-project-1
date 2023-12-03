@@ -5,20 +5,11 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_PROFILE           = 'rsood'
     }
 
     agent any
 
-    stages {
-        stage('Set AWS Profile') {
-            steps {
-                script {
-                    // Set AWS_PROFILE environment variable
-                    sh 'export AWS_PROFILE=rsood'
-                }
-            }
-        }
-        
     stages {
         stage('Checkout') {
             steps {
@@ -61,7 +52,7 @@ pipeline {
             steps {
                 echo 'Applying Terraform changes...'
                 script {
-                    sh 'cd terraform; AWS_PROFILE=$AWS_PROFILE terraform apply -input=false tfplan'
+                    sh 'cd terraform && AWS_PROFILE=$AWS_PROFILE terraform apply -input=false tfplan'
                 }
             }
         }
