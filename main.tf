@@ -1,6 +1,6 @@
 provider "aws" {
   region = "us-west-2"
-  #profile = var.aws_profile
+  profile = var.aws_profile
 }
 
 resource "aws_instance" "example" {
