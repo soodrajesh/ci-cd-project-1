@@ -25,7 +25,7 @@ pipeline {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
+                    sh 'cd terraform; terraform init; terraform plan'
                 }
             }
         }
@@ -40,9 +40,9 @@ pipeline {
             steps {
                 echo 'Waiting for approval...'
                 script {
-                    def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                          parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    input message: 'Do you want to apply the plan?',
+                          ok: 'Proceed',
+                          parameters: [booleanParam(defaultValue: false, description: 'Apply the plan?', name: 'APPLY_PLAN')]
                 }
             }
         }
@@ -51,7 +51,11 @@ pipeline {
             steps {
                 echo 'Applying Terraform changes...'
                 script {
-                    sh 'cd terraform; AWS_PROFILE=$AWS_PROFILE terraform apply -input=false tfplan'
+                    if (params.APPLY_PLAN) {
+                        sh 'cd terraform; terraform apply -input=false'
+                    } else {
+                        echo 'User chose not to apply the plan. Exiting...'
+                    }
                 }
             }
         }
