@@ -5,7 +5,8 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_PROFILE           = 'rsood'
+        DEV_AWS_PROFILE       = 'dev-user'
+        PROD_AWS_PROFILE      = 'prod-user'
     }
 
     agent any
@@ -32,15 +33,14 @@ pipeline {
         }
 
         stage('Approval') {
-            when {
-                not {
-                    equals expected: true, actual: params.autoApprove
-                }
-            }
-
             steps {
-                echo 'Waiting for approval...'
                 script {
+                    when {
+                        not {
+                            equals expected: true, actual: params.autoApprove
+                        }
+                    }
+                    echo 'Waiting for approval...'
                     def plan = readFile 'terraform/tfplan.txt'
                     input message: "Do you want to apply the plan?",
                           parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
@@ -49,10 +49,16 @@ pipeline {
         }
 
         stage('Apply') {
+            when {
+                expression { 
+                    return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'master'
+                }
+            }
             steps {
-                echo 'Applying Terraform changes...'
                 script {
-                    sh 'cd terraform && AWS_PROFILE=$AWS_PROFILE terraform apply -input=false tfplan'
+                    def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
+                    echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
+                    sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
                 }
             }
         }
