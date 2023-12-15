@@ -33,9 +33,8 @@ pipeline {
             steps {
                 script {
                     def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
-                    echo "AWS Profile: $awsProfile"  // Debug print
                     echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
-                    sh "AWS_PROFILE=$awsProfile terraform apply -input=false"
+                    sh "terraform apply -input=false -auto-approve -var 'aws_profile=$awsProfile'"
                 }
             }
         }
