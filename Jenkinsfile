@@ -33,10 +33,10 @@ pipeline {
             }
         }
 
-        stage('Apply') {
+        stage('Apply for Development Merge') {
             when {
                 expression { 
-                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development'
+                    return env.BRANCH_NAME == 'development'
                 }
             }
             steps {
