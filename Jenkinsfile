@@ -37,7 +37,7 @@ pipeline {
         stage('Apply') {
             when {
                 expression { 
-                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development' || env.CHANGE_TARGET == 'main'
+                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development'
                 }
             }
             steps {
