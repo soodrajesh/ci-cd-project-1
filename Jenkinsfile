@@ -14,11 +14,19 @@ pipeline {
             }
         }
 
+        stage('Print Workspace Contents') {
+            steps {
+                script {
+                    sh 'ls -lR ${WORKSPACE}'
+                }
+            }
+        }
+
         stage('Plan') {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
+                    sh 'cd ${WORKSPACE}/terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
                 }
             }
         }
@@ -44,7 +52,7 @@ pipeline {
                 script {
                     def awsProfile = DEV_AWS_PROFILE
                     echo "Applying Terraform changes for development branch merge using AWS profile: $awsProfile"
-                    sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
+                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
                 }
             }
         }
@@ -59,7 +67,7 @@ pipeline {
                 script {
                     def awsProfile = PROD_AWS_PROFILE
                     echo "Applying Terraform changes for main branch merge using AWS profile: $awsProfile"
-                    sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
+                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
                 }
             }
         }
