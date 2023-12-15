@@ -14,60 +14,27 @@ pipeline {
             }
         }
 
-        stage('Print Workspace Contents') {
-            steps {
-                script {
-                    sh 'ls -lR ${WORKSPACE}'
-                }
-            }
-        }
-
         stage('Plan') {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd ${WORKSPACE}/terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
+                    sh 'terraform init'
+                    sh 'terraform plan -no-color'
                 }
             }
         }
 
-        stage('Approval') {
-            steps {
-                script {
-                    echo 'Waiting for approval...'
-                    def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                          parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-                }
-            }
-        }
-
-        stage('Apply for Development Merge') {
+        stage('Apply') {
             when {
                 expression { 
-                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development'
+                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development' || env.CHANGE_TARGET == 'main'
                 }
             }
             steps {
                 script {
-                    def awsProfile = DEV_AWS_PROFILE
-                    echo "Applying Terraform changes for development branch merge using AWS profile: $awsProfile"
-                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
-                }
-            }
-        }
-
-        stage('Apply for Main Merge') {
-            when {
-                expression { 
-                    return env.CHANGE_TARGET == 'main'
-                }
-            }
-            steps {
-                script {
-                    def awsProfile = PROD_AWS_PROFILE
-                    echo "Applying Terraform changes for main branch merge using AWS profile: $awsProfile"
-                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
+                    def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
+                    echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
+                    sh "terraform apply -input=false -auto-approve -var 'aws_profile=$awsProfile'"
                 }
             }
         }
