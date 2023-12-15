@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEV_AWS_PROFILE  = 'dev-user'
-        PROD_AWS_PROFILE = 'prod-user'
+        DEV_AWS_PROFILE = 'dev-user'
     }
 
     stages {
@@ -34,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Apply for Development Merge') {
+        stage('Apply') {
             when {
                 expression { 
                     return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development'
@@ -44,21 +43,6 @@ pipeline {
                 script {
                     def awsProfile = DEV_AWS_PROFILE
                     echo "Applying Terraform changes for development branch merge using AWS profile: $awsProfile"
-                    sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
-                }
-            }
-        }
-
-        stage('Apply for Main Merge') {
-            when {
-                expression { 
-                    return env.CHANGE_TARGET == 'main'
-                }
-            }
-            steps {
-                script {
-                    def awsProfile = PROD_AWS_PROFILE
-                    echo "Applying Terraform changes for main branch merge using AWS profile: $awsProfile"
                     sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
                 }
             }
