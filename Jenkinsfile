@@ -37,8 +37,7 @@ pipeline {
         stage('Apply') {
             when {
                 expression { 
-                    // Trigger for merging into 'main' or 'development'
-                    return env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'main'
+                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development' || env.CHANGE_TARGET == 'main'
                 }
             }
             steps {
