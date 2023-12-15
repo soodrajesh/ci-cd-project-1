@@ -19,7 +19,7 @@ pipeline {
                 echo 'Running Terraform init and plan...'
                 script {
                     sh 'terraform init'
-                    sh 'terraform plan -out terraform/tfplan'
+                    sh 'terraform plan -no-color'
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
                     def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
                     echo "AWS Profile: $awsProfile"  // Debug print
                     echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
-                    sh "AWS_PROFILE=$awsProfile terraform apply -input=false terraform/tfplan"
+                    sh "AWS_PROFILE=$awsProfile terraform apply -input=false"
                 }
             }
         }
