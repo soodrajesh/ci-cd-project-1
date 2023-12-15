@@ -18,7 +18,7 @@ pipeline {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
+                    sh 'terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
                 }
             }
         }
