@@ -1,23 +1,24 @@
 pipeline {
-    agent any
-
+    parameters {
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+    } 
     environment {
-        DEV_AWS_PROFILE  = 'dev-user'
-        PROD_AWS_PROFILE = 'prod-user'
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        DEV_AWS_PROFILE       = 'dev-user'
+        PROD_AWS_PROFILE      = 'prod-user'
     }
+
+    agent any
 
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code...'
-                checkout scm
-            }
-        }
-
-        stage('Print Workspace Contents') {
-            steps {
                 script {
-                    sh 'ls -lR ${WORKSPACE}'
+                    dir("terraform") {
+                        checkout scm
+                    }
                 }
             }
         }
@@ -26,7 +27,7 @@ pipeline {
             steps {
                 echo 'Running Terraform init and plan...'
                 script {
-                    sh 'cd ${WORKSPACE}/terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
+                    sh 'cd terraform; terraform init; terraform plan -out tfplan; terraform show -no-color tfplan'
                 }
             }
         }
@@ -34,6 +35,11 @@ pipeline {
         stage('Approval') {
             steps {
                 script {
+                    when {
+                        not {
+                            equals expected: true, actual: params.autoApprove
+                        }
+                    }
                     echo 'Waiting for approval...'
                     def plan = readFile 'terraform/tfplan.txt'
                     input message: "Do you want to apply the plan?",
@@ -42,32 +48,17 @@ pipeline {
             }
         }
 
-        stage('Apply for Development Merge') {
+        stage('Apply') {
             when {
                 expression { 
-                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development'
+                    return env.BRANCH_NAME == 'development' || env.BRANCH_NAME == 'master'
                 }
             }
             steps {
                 script {
-                    def awsProfile = DEV_AWS_PROFILE
-                    echo "Applying Terraform changes for development branch merge using AWS profile: $awsProfile"
-                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
-                }
-            }
-        }
-
-        stage('Apply for Main Merge') {
-            when {
-                expression { 
-                    return env.CHANGE_TARGET == 'main'
-                }
-            }
-            steps {
-                script {
-                    def awsProfile = PROD_AWS_PROFILE
-                    echo "Applying Terraform changes for main branch merge using AWS profile: $awsProfile"
-                    sh "cd ${WORKSPACE}/terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
+                    def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
+                    echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
+                    sh "cd terraform && AWS_PROFILE=$awsProfile terraform apply -input=false tfplan"
                 }
             }
         }
