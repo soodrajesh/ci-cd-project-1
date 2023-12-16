@@ -38,12 +38,15 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Unset the TF_WORKSPACE variable before selecting the Terraform workspace
-                    sh "unset TF_WORKSPACE"
-                    sh "terraform workspace select ${terraformWorkspace}"
+                    // Use withEnv to unset the TF_WORKSPACE for the current shell session
+                    withEnv(['TF_WORKSPACE=']) {
+                        // Set the Terraform workspace
+                        sh "terraform workspace select ${terraformWorkspace}"
+                    }
                 }
             }
         }
+
 
         stage('Terraform Plan') {
             steps {
