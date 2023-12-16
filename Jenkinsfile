@@ -41,11 +41,8 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Use withEnv to set AWS_PROFILE and unset TF_WORKSPACE for the current shell session
-                    withEnv(['AWS_PROFILE=' + awsProfile, 'TF_WORKSPACE=']) {
-                        // Set the Terraform workspace
-                        sh "terraform workspace select ${terraformWorkspace}"
-                    }
+                    // Set the Terraform workspace and AWS_PROFILE
+                    sh "AWS_PROFILE=${awsProfile} terraform workspace select ${terraformWorkspace}"
                 }
             }
         }
