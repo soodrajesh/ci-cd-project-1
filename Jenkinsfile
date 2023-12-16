@@ -99,7 +99,7 @@ pipeline {
                     }
 
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        sh 'terraform apply -var-file=../config.tfbackend` -auto-approve tfplan'
+                        sh 'terraform apply -var-file=../config.tfbackend -auto-approve tfplan'
                     }
                 }
             }
