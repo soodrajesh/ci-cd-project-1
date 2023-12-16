@@ -47,7 +47,7 @@ pipeline {
                         awsAccessKeyId = env.AWS_ACCESS_KEY_ID
                     }
 
-                    echo "Using AWS credentials:"
+                    echo 'Using AWS credentials:'
                     echo "  Access Key ID: ${awsAccessKeyId}"
 
                     // Check if the Terraform workspace exists
