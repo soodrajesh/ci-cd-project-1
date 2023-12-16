@@ -18,6 +18,14 @@ pipeline {
             }
         }
 
+        stage('Terraform Init') {
+            steps {
+                script {
+                    sh 'terraform init'
+                }
+            }
+        }
+
         stage('Terraform Select Workspace') {
             steps {
                 script {
@@ -54,14 +62,6 @@ pipeline {
 
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
-                }
-            }
-        }
-
-        stage('Terraform Init') {
-            steps {
-                script {
-                    sh 'terraform init'
                 }
             }
         }
