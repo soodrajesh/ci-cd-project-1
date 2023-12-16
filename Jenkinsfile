@@ -46,8 +46,8 @@ pipeline {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                         awsAccessKeyId = env.AWS_ACCESS_KEY_ID
                     }
-                    
-                    def awsAccessKeyId = env.AWS_ACCESS_KEY_ID
+
+                    def accessKeyId = env.AWS_ACCESS_KEY_ID
                     echo "Using AWS credentials:"
                     echo "  Access Key ID: ${awsAccessKeyId}"
 
