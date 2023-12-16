@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        TF_WORKSPACE = 'default' // Set the default Terraform workspace
         AWS_PROFILE = 'default' // Set the default AWS CLI profile
     }
 
@@ -26,7 +25,10 @@ pipeline {
             steps {
                 script {
                     // Determine the Terraform workspace based on the branch being built
-                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
+                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'prod' : 'dev'
+
+                    // Unset the TF_WORKSPACE variable
+                    sh 'unset TF_WORKSPACE'
 
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
@@ -40,9 +42,6 @@ pipeline {
 
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
-
-                    // Set the AWS CLI profile based on the Terraform workspace
-                    AWS_PROFILE = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
                 }
             }
         }
