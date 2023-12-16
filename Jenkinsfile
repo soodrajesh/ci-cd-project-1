@@ -41,11 +41,12 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Set the Terraform workspace and AWS_PROFILE
-                    sh "AWS_PROFILE=${awsProfile} terraform workspace select ${terraformWorkspace}"
+                    // Unset TF_WORKSPACE and set the Terraform workspace and AWS_PROFILE
+                    sh "unset TF_WORKSPACE && AWS_PROFILE=${awsProfile} terraform workspace select ${terraformWorkspace}"
                 }
             }
         }
+
 
 
 
