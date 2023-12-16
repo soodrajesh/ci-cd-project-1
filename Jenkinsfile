@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        TF_WORKSPACE = 'default' // Set the default Terraform workspace
+        AWS_PROFILE = 'default' // Set the default AWS CLI profile
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -35,6 +40,9 @@ pipeline {
 
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
+
+                    // Set the AWS CLI profile based on the Terraform workspace
+                    AWS_PROFILE = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
                 }
             }
         }
