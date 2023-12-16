@@ -40,6 +40,9 @@ pipeline {
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
 
+                    // Unset the TF_WORKSPACE variable
+                    sh 'unset TF_WORKSPACE'
+                    
                     // Determine the AWS profile based on the Terraform workspace
                     def awsProfile = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
 
