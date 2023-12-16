@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        TF_WORKSPACE   = 'dev' // Set the default Terraform workspace
-        DEV_AWS_PROFILE  = 'dev-user' // Set the default AWS CLI profile for development
-        PROD_AWS_PROFILE = 'prod-user' // Set the default AWS CLI profile for production
+        TF_WORKSPACE = 'dev' // Set the default Terraform workspace
+        AWS_PROFILE = 'dev-user' // Set the default AWS CLI profile
     }
 
     stages {
@@ -39,7 +38,8 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Set the Terraform workspace
+                    // Unset the TF_WORKSPACE variable before selecting the Terraform workspace
+                    sh "unset TF_WORKSPACE"
                     sh "terraform workspace select ${terraformWorkspace}"
                 }
             }
@@ -66,11 +66,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    // Set the AWS profile based on the branch being built
-                    def awsProfile = env.BRANCH_NAME == 'main' ? PROD_AWS_PROFILE : DEV_AWS_PROFILE
-                    
-                    // Explicitly set the AWS_PROFILE environment variable
-                    sh "AWS_PROFILE=${awsProfile} terraform apply -auto-approve tfplan"
+                    sh 'terraform apply -auto-approve tfplan'
                 }
             }
         }
