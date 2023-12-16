@@ -22,12 +22,23 @@ pipeline {
                 script {
                     // Determine the Terraform workspace based on the branch being built
                     def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
-                    
+
+                    // Check if the Terraform workspace exists
+                    def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
+
+                    if (workspaceExists == 0) {
+                        echo "Terraform workspace '${terraformWorkspace}' exists."
+                    } else {
+                        echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
+                        sh "terraform workspace new ${terraformWorkspace}"
+                    }
+
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
                 }
             }
         }
+
 
         stage('Terraform Plan') {
             steps {
