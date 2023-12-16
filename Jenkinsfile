@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        TF_WORKSPACE = 'dev' // Set the default Terraform workspace
-        AWS_PROFILE = 'dev-user' // Set the default AWS CLI profile
+        TF_WORKSPACE = 'default' // Set the default Terraform workspace
     }
 
     stages {
@@ -27,9 +26,6 @@ pipeline {
                 script {
                     // Determine the Terraform workspace based on the branch being built
                     def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
-                    
-                    // Determine the AWS profile based on the Terraform workspace
-                    def awsProfile = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
 
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
@@ -41,18 +37,22 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Unset TF_WORKSPACE and set the Terraform workspace and AWS_PROFILE
-                    sh "unset TF_WORKSPACE && AWS_PROFILE=${awsProfile} terraform workspace select ${terraformWorkspace}"
+                    // Set the Terraform workspace
+                    sh "terraform workspace select ${terraformWorkspace}"
+
+                    // Determine the AWS profile based on the Terraform workspace
+                    def awsProfile = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
+
+                    // Export AWS_PROFILE
+                    sh "export AWS_PROFILE=${awsProfile}"
                 }
             }
         }
 
-
-
-
         stage('Terraform Plan') {
             steps {
                 script {
+                    // Run Terraform plan
                     sh 'terraform plan -out=tfplan'
                 }
             }
@@ -71,6 +71,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
+                    // Run Terraform apply
                     sh 'terraform apply -auto-approve tfplan'
                 }
             }
