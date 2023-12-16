@@ -1,11 +1,31 @@
 pipeline {
     agent any
 
+    environment {
+        DEV_AWS_PROFILE = 'dev-user'
+        PROD_AWS_PROFILE = 'prod-user'
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code...'
                 checkout scm
+            }
+        }
+
+        stage('Set AWS Profiles') {
+            steps {
+                script {
+                    // Determine the Terraform workspace based on the branch being built
+                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
+
+                    // Set the appropriate AWS profile
+                    def awsProfile = terraformWorkspace == 'development' ? env.DEV_AWS_PROFILE : env.PROD_AWS_PROFILE
+                    sh "export AWS_PROFILE=${awsProfile}"
+
+                    echo "Using AWS profile: ${awsProfile}"
+                }
             }
         }
 
