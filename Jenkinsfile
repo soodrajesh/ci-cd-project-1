@@ -20,30 +20,6 @@ pipeline {
             }
         }
 
-        stage('Set AWS Profiles') {
-            steps {
-                script {
-                    // Determine the Terraform workspace based on the branch being built
-                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
-
-                    // Set the appropriate AWS credentials
-                    def awsAccessKeyId = terraformWorkspace == 'development' ? env.DEV_AWS_ACCESS_KEY_ID : env.PROD_AWS_ACCESS_KEY_ID
-                    def awsSecretAccessKey = terraformWorkspace == 'development' ? env.DEV_AWS_SECRET_ACCESS_KEY : env.PROD_AWS_SECRET_ACCESS_KEY
-                    def awsRegion = terraformWorkspace == 'development' ? env.DEV_AWS_REGION : env.PROD_AWS_REGION
-
-                    // Set environment variables for AWS CLI
-                    withCredentials([
-                        [usernamePassword(credentialsId: awsAccessKeyId, passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]
-                    ]) {
-                        sh "export AWS_REGION=${awsRegion}"
-                        sh "export AWS_PROFILE=${awsAccessKeyId}"  // You can use credentials ID as the profile name
-                    }
-
-                    echo "Using AWS profile: ${awsAccessKeyId} in region: ${awsRegion}"
-                }
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 script {
@@ -56,7 +32,7 @@ pipeline {
             steps {
                 script {
                     // Determine the Terraform workspace based on the branch being built
-                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? env.PROD_TF_WORKSPACE : env.DEV_TF_WORKSPACE
+                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? PROD_TF_WORKSPACE : DEV_TF_WORKSPACE
 
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
@@ -87,7 +63,7 @@ pipeline {
                 script {
                     echo 'Waiting for approval...'
                     input message: 'Do you want to apply the Terraform plan?',
-                        ok: 'Proceed'
+                          ok: 'Proceed'
                 }
             }
         }
