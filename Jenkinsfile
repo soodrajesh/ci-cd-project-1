@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DEV_AWS_PROFILE  = 'dev-user'
-        PROD_AWS_PROFILE = 'prod-user'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -14,35 +9,38 @@ pipeline {
             }
         }
 
-        stage('Plan') {
+        stage('Terraform Init') {
             steps {
-                echo 'Running Terraform init and plan...'
                 script {
                     sh 'terraform init'
-                    sh 'terraform plan -no-color'
                 }
             }
         }
 
-        stage('Apply') {
-            when {
-                expression { 
-                    return env.BRANCH_NAME == 'development' || env.CHANGE_TARGET == 'development' || (env.BRANCH_NAME == 'main' && env.CHANGE_TARGET == 'development')
-                }
-            }
+        stage('Terraform Select Workspace') {
             steps {
                 script {
-                    echo "Debug: Entering Apply stage"
-
-                    // Determine the AWS profile based on the branch being merged
-                    def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
-                    echo "AWS Profile: $awsProfile"  // Debug print
-                    echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
+                    // Determine the Terraform workspace based on the branch being built
+                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
                     
-                    // Run Terraform apply with debug output and use the workspace
-                    sh "terraform apply -input=false -auto-approve -var 'aws_profile=$awsProfile'"
+                    // Set the Terraform workspace
+                    sh "terraform workspace select ${terraformWorkspace}"
+                }
+            }
+        }
 
-                    echo "Debug: Terraform apply completed"
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    sh 'terraform apply -auto-approve tfplan'
                 }
             }
         }
