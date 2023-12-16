@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DEV_AWS_PROFILE  = 'dev-user'
-        PROD_AWS_PROFILE = 'prod-user'
-        AWS_PROFILE = '' // Initialize AWS_PROFILE to an empty string
+        TF_WORKSPACE   = 'dev' // Set the default Terraform workspace
+        DEV_AWS_PROFILE  = 'dev-user' // Set the default AWS CLI profile for development
+        PROD_AWS_PROFILE = 'prod-user' // Set the default AWS CLI profile for production
     }
 
     stages {
@@ -37,15 +37,10 @@ pipeline {
                     } else {
                         echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
                         sh "terraform workspace new ${terraformWorkspace}"
-                        // After creating the workspace, select it again
-                        sh "terraform workspace select ${terraformWorkspace}"
                     }
 
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
-
-                    // Determine the AWS profile based on the branch being merged
-                    AWS_PROFILE = env.BRANCH_NAME == 'main' ? PROD_AWS_PROFILE : DEV_AWS_PROFILE
                 }
             }
         }
@@ -71,8 +66,11 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    // Run Terraform apply with the dynamically determined AWS profile
-                    sh "AWS_PROFILE=${AWS_PROFILE} terraform apply -auto-approve tfplan"
+                    // Set the AWS profile based on the branch being built
+                    def awsProfile = env.BRANCH_NAME == 'main' ? PROD_AWS_PROFILE : DEV_AWS_PROFILE
+                    
+                    // Explicitly set the AWS_PROFILE environment variable
+                    sh "AWS_PROFILE=${awsProfile} terraform apply -auto-approve tfplan"
                 }
             }
         }
