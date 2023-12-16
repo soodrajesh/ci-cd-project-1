@@ -47,10 +47,10 @@ pipeline {
                         awsAccessKeyId = env.AWS_ACCESS_KEY_ID
                     }
 
-                    def accessKeyId = env.AWS_ACCESS_KEY_ID
                     echo "Using AWS credentials:"
                     echo "  Access Key ID: ${awsAccessKeyId}"
-
+                    echo "Credentials ID: ${awsCredentialsId}"
+                    
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
 
