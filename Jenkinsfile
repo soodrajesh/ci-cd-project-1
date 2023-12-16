@@ -33,7 +33,7 @@ pipeline {
 
                     // Set environment variables for AWS CLI
                     withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: awsAccessKeyId]
+                        [usernamePassword(credentialsId: awsAccessKeyId, passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]
                     ]) {
                         sh "export AWS_REGION=${awsRegion}"
                         sh "export AWS_PROFILE=${awsAccessKeyId}"  // You can use credentials ID as the profile name
@@ -45,60 +45,59 @@ pipeline {
         }
 
         stage('Terraform Init') {
-                    steps {
-                        script {
-                            sh 'terraform init'
-                        }
-                    }
-                }
-
-                stage('Terraform Select Workspace') {
-                    steps {
-                        script {
-                            // Determine the Terraform workspace based on the branch being built
-                            def terraformWorkspace = env.BRANCH_NAME == 'main' ? env.PROD_TF_WORKSPACE : env.DEV_TF_WORKSPACE
-
-                            // Check if the Terraform workspace exists
-                            def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
-
-                            if (workspaceExists == 0) {
-                                echo "Terraform workspace '${terraformWorkspace}' exists."
-                            } else {
-                                echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
-                                sh "terraform workspace new ${terraformWorkspace}"
-                            }
-
-                            // Set the Terraform workspace
-                            sh "terraform workspace select ${terraformWorkspace}"
-                        }
-                    }
-                }
-
-                stage('Terraform Plan') {
-                    steps {
-                        script {
-                            sh 'terraform plan -out=tfplan'
-                        }
-                    }
-                }
-
-                stage('Manual Approval') {
-                    steps {
-                        script {
-                            echo 'Waiting for approval...'
-                            input message: 'Do you want to apply the Terraform plan?',
-                                ok: 'Proceed'
-                        }
-                    }
-                }
-
-                stage('Terraform Apply') {
-                    steps {
-                        script {
-                            sh 'terraform apply -auto-approve tfplan'
-                        }
-                    }
+            steps {
+                script {
+                    sh 'terraform init'
                 }
             }
         }
-    
+
+        stage('Terraform Select Workspace') {
+            steps {
+                script {
+                    // Determine the Terraform workspace based on the branch being built
+                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? env.PROD_TF_WORKSPACE : env.DEV_TF_WORKSPACE
+
+                    // Check if the Terraform workspace exists
+                    def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
+
+                    if (workspaceExists == 0) {
+                        echo "Terraform workspace '${terraformWorkspace}' exists."
+                    } else {
+                        echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
+                        sh "terraform workspace new ${terraformWorkspace}"
+                    }
+
+                    // Set the Terraform workspace
+                    sh "terraform workspace select ${terraformWorkspace}"
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Manual Approval') {
+            steps {
+                script {
+                    echo 'Waiting for approval...'
+                    input message: 'Do you want to apply the Terraform plan?',
+                        ok: 'Proceed'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+    }
+}
