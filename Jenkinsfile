@@ -57,15 +57,8 @@ pipeline {
                     // Set AWS credentials for the selected environment
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                         // Additional steps if needed
+                        sh 'terraform plan -out=tfplan'
                     }
-                }
-            }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                script {
-                    sh 'terraform plan -out=tfplan'
                 }
             }
         }
@@ -83,6 +76,15 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
+                    // Ensure awsCredentialsId is defined in this scope
+                    def awsCredentialsId
+
+                    if (env.BRANCH_NAME == 'main') {
+                        awsCredentialsId = 'aws-prod-user'
+                    } else {
+                        awsCredentialsId = 'aws-dev-user'
+                    }
+
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                         sh 'terraform apply -auto-approve tfplan'
                     }
