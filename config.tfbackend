@@ -1,0 +1,4 @@
+bucket = "demo-tf-state-rsood"
+region = "us-west-2"
+dynamodb_table = "demo-tf-state-lock"
+profile = "rsood"
