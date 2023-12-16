@@ -25,6 +25,15 @@ pipeline {
                     sh "export AWS_PROFILE=${awsProfile}"
 
                     echo "Using AWS profile: ${awsProfile}"
+
+                    // Check if AWS CLI is configured with the selected profile
+                    def awsConfigured = sh(script: "aws configure list | grep -q ${awsProfile}", returnStatus: true)
+
+                    if (awsConfigured == 0) {
+                        echo "AWS profile '${awsProfile}' found in AWS CLI configuration."
+                    } else {
+                        echo "AWS profile '${awsProfile}' not found in AWS CLI configuration. Please configure it."
+                    }
                 }
             }
         }
