@@ -138,12 +138,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            emailext (
-                // ... (unchanged)
-            )
-        }
-    }
 }
