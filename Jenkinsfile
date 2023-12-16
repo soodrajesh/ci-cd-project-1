@@ -39,11 +39,20 @@ pipeline {
             }
         }
 
-
         stage('Terraform Plan') {
             steps {
                 script {
                     sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Manual Approval') {
+            steps {
+                script {
+                    echo 'Waiting for approval...'
+                    input message: 'Do you want to apply the Terraform plan?',
+                          ok: 'Proceed'
                 }
             }
         }
