@@ -26,42 +26,51 @@ pipeline {
             }
         }
 
-        stage('Terraform Select Workspace') {
-            steps {
-                script {
-                    // Determine the Terraform workspace and AWS credentials based on the branch being built
-                    def terraformWorkspace
-                    def awsCredentialsId
+stage('Terraform Select Workspace') {
+    steps {
+        script {
+            def terraformWorkspace
+            def awsCredentialsId
 
-                    if (env.BRANCH_NAME == 'main') {
-                        terraformWorkspace = PROD_TF_WORKSPACE
-                        awsCredentialsId = 'aws-prod-user'
-                    } else {
-                        terraformWorkspace = DEV_TF_WORKSPACE
-                        awsCredentialsId = 'aws-dev-user'
-                    }
-
-                    // Check if the Terraform workspace exists
-                    def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
-
-                    if (workspaceExists == 0) {
-                        echo "Terraform workspace '${terraformWorkspace}' exists."
-                    } else {
-                        echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
-                        sh "terraform workspace new ${terraformWorkspace}"
-                    }
-
-                    // Set the Terraform workspace
-                    sh "terraform workspace select ${terraformWorkspace}"
-
-                    // Set AWS credentials for the selected environment
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Additional steps if needed
-                        sh 'terraform plan -out=tfplan'
-                    }
-                }
+            if (env.BRANCH_NAME == 'main') {
+                terraformWorkspace = PROD_TF_WORKSPACE
+                awsCredentialsId = 'aws-prod-user'
+            } else {
+                terraformWorkspace = DEV_TF_WORKSPACE
+                awsCredentialsId = 'aws-dev-user'
             }
+
+            def awsAccessKeyId
+            def awsSecretAccessKey
+
+            // Retrieve AWS credentials from Jenkins
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                awsAccessKeyId = env.AWS_ACCESS_KEY_ID
+                awsSecretAccessKey = env.AWS_SECRET_ACCESS_KEY
+            }
+
+            echo "Using AWS credentials:"
+            echo "  Access Key ID: ${awsAccessKeyId}"
+            echo "  Secret Access Key: ${awsSecretAccessKey}"
+
+            // Check if the Terraform workspace exists
+            def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
+
+            if (workspaceExists == 0) {
+                echo "Terraform workspace '${terraformWorkspace}' exists."
+            } else {
+                echo "Terraform workspace '${terraformWorkspace}' doesn't exist. Creating..."
+                sh "terraform workspace new ${terraformWorkspace}"
+            }
+
+            // Set the Terraform workspace
+            sh "terraform workspace select ${terraformWorkspace}"
+
+            // Additional steps if needed
+            sh 'terraform plan -out=tfplan'
         }
+    }
+}
 
         stage('Manual Approval') {
             steps {
