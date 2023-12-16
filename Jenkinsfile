@@ -2,10 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DEV_AWS_ACCESS_KEY_ID = credentials('ac1-dev-aws-accesskey-id')
-        DEV_AWS_SECRET_ACCESS_KEY = credentials('ac1-dev-aws-secretaccesskey-id')
-        PROD_AWS_ACCESS_KEY_ID = credentials('ac1-prod-aws-accesskey-id')
-        PROD_AWS_SECRET_ACCESS_KEY = credentials('ac2-prod-aws-secretaccesskey-id')
+        DEV_AWS_ACCESS_KEY_ID = credentials('aws-dev-user')
+        PROD_AWS_ACCESS_KEY_ID = credentials('aws-prod-user')
         DEV_AWS_REGION = 'us-west-2'
         PROD_AWS_REGION = 'us-west-2'
         DEV_TF_WORKSPACE = 'development'
@@ -31,8 +29,17 @@ pipeline {
         stage('Terraform Select Workspace') {
             steps {
                 script {
-                    // Determine the Terraform workspace based on the branch being built
-                    def terraformWorkspace = env.BRANCH_NAME == 'main' ? PROD_TF_WORKSPACE : DEV_TF_WORKSPACE
+                    // Determine the Terraform workspace and AWS credentials based on the branch being built
+                    def terraformWorkspace
+                    def awsCredentialsId
+
+                    if (env.BRANCH_NAME == 'main') {
+                        terraformWorkspace = PROD_TF_WORKSPACE
+                        awsCredentialsId = 'aws-prod-user'
+                    } else {
+                        terraformWorkspace = DEV_TF_WORKSPACE
+                        awsCredentialsId = 'aws-dev-user'
+                    }
 
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
@@ -46,6 +53,11 @@ pipeline {
 
                     // Set the Terraform workspace
                     sh "terraform workspace select ${terraformWorkspace}"
+
+                    // Set AWS credentials for the selected environment
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        // Additional steps if needed
+                    }
                 }
             }
         }
@@ -71,7 +83,9 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    sh 'terraform apply -auto-approve tfplan'
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        sh 'terraform apply -auto-approve tfplan'
+                    }
                 }
             }
         }
