@@ -38,8 +38,8 @@ pipeline {
                     def awsProfile = env.BRANCH_NAME == 'development' ? DEV_AWS_PROFILE : PROD_AWS_PROFILE
                     echo "AWS Profile: $awsProfile"  // Debug print
                     echo "Applying Terraform changes to the ${env.BRANCH_NAME} branch using AWS profile: $awsProfile"
-            
-                    // Run Terraform apply with debug output
+                    
+                    // Run Terraform apply with debug output and use the workspace
                     sh "terraform apply -input=false -auto-approve -var 'aws_profile=$awsProfile'"
 
                     echo "Debug: Terraform apply completed"
