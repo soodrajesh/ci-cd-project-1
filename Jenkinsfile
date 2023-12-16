@@ -27,6 +27,9 @@ pipeline {
                 script {
                     // Determine the Terraform workspace based on the branch being built
                     def terraformWorkspace = env.BRANCH_NAME == 'main' ? 'production' : 'development'
+                    
+                    // Determine the AWS profile based on the Terraform workspace
+                    def awsProfile = terraformWorkspace == 'development' ? 'dev-user' : 'prod-user'
 
                     // Check if the Terraform workspace exists
                     def workspaceExists = sh(script: "terraform workspace list | grep -q ${terraformWorkspace}", returnStatus: true)
@@ -38,14 +41,15 @@ pipeline {
                         sh "terraform workspace new ${terraformWorkspace}"
                     }
 
-                    // Use withEnv to unset the TF_WORKSPACE for the current shell session
-                    withEnv(['TF_WORKSPACE=']) {
+                    // Use withEnv to set AWS_PROFILE and unset TF_WORKSPACE for the current shell session
+                    withEnv(['AWS_PROFILE=' + awsProfile, 'TF_WORKSPACE=']) {
                         // Set the Terraform workspace
                         sh "terraform workspace select ${terraformWorkspace}"
                     }
                 }
             }
         }
+
 
 
         stage('Terraform Plan') {
