@@ -8,7 +8,7 @@ pipeline {
         PROD_AWS_REGION = 'us-west-2'
         DEV_TF_WORKSPACE = 'development'
         PROD_TF_WORKSPACE = 'production'
-        SLACK_CHANNEL = 'githug-alerts'
+        SLACK_CHANNEL = 'github-alerts'
     }
 
     stages {
@@ -109,6 +109,7 @@ pipeline {
                         message: "Terraform apply successful on branch ${env.BRANCH_NAME}",
                         channel: SLACK_CHANNEL
                     )
+
                 }
             }
         }
