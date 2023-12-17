@@ -21,7 +21,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh 'terraform init -backend-config=../config.tfbackendt'
+                    sh 'terraform init'
                 }
             }
         }
