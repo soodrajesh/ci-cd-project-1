@@ -21,10 +21,13 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh 'terraform init'
+                    // Answer "yes" to the state migration prompt during init
+                    sh 'echo "yes" | terraform init'
                 }
             }
         }
+
+
 
         stage('Terraform Select Workspace') {
             steps {

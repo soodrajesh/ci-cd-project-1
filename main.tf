@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-west-2"
+  region = var.region
   #profile = var.aws_profile
 }
 
@@ -18,6 +18,6 @@ resource "aws_instance" "example" {
   }
 
   tags = {
-    Name = "Demo-App"
+    Name = "Demo-App-${terraform.workspace}"
   }
 }

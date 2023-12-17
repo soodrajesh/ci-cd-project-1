@@ -4,6 +4,11 @@ variable "aws_profile" {
   default     = "rsood"
 }
 
+variable "region" {
+  type = string
+  default = "us-west-2"  
+}
+
 variable "ami-name" {
   type = string
   default = "ami-002c2b8d1f5b1eb47"  
