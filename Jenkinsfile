@@ -21,11 +21,14 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    // Include -input=false to automatically select the default option
-                    sh 'terraform init -input=false'
+                    // Set TF_CLI_ARGS_init environment variable to disable input during init
+                    withEnv(['TF_CLI_ARGS_init=-input=false']) {
+                        sh 'terraform init'
+                    }
                 }
             }
         }
+
 
 
         stage('Terraform Select Workspace') {
