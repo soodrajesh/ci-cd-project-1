@@ -10,10 +10,11 @@ terraform {
       version = "~> 4.16"
     }
   }
-  # NOTE: Comment the backend block if initializing the terraform for the first time.
-  # Refer README.md .
+
   backend "s3" {
-    key = "terraform.tfstate"
+    bucket = "demo-tf-state"
+    key = "global/tfstate/terraform.tfstate"
     encrypt = true
-  }
+    dynamodb_table = "demo-tf-state-lock"
+    region  = var.region
 }
