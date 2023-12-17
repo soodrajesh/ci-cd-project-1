@@ -1,8 +1,3 @@
-provider "aws" {
-  region  = var.region
-  profile = var.profile
-}
-
 terraform {
   required_providers {
     aws = {
@@ -17,4 +12,6 @@ terraform {
     encrypt = true
     dynamodb_table = "demo-tf-state-lock"
     region  = var.region
-}
+    profile = var.aws_profile
+    }
+  }
