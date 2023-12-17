@@ -113,4 +113,19 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            slackSend(
+                color: '#36a64f',
+                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} completed",
+                channel: SLACK_CHANNEL
+            )
+            slackSend(
+                color: '#36a64f',
+                message: "GitHub build completed",
+                channel: SLACK_CHANNEL
+            )
+        }
+    }
 }
