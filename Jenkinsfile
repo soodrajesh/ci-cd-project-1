@@ -8,6 +8,7 @@ pipeline {
         PROD_AWS_REGION = 'us-west-2'
         DEV_TF_WORKSPACE = 'development'
         PROD_TF_WORKSPACE = 'production'
+        SLACK_CHANNEL = 'githug-alerts'
     }
 
     stages {
@@ -26,8 +27,6 @@ pipeline {
                 }
             }
         }
-
-
 
         stage('Terraform Select Workspace') {
             steps {
@@ -51,7 +50,6 @@ pipeline {
                     }
 
                     echo "Using AWS credentials:"
-                    //echo "  Access Key ID: ${awsAccessKeyId}"
                     echo "Credentials ID: ${awsCredentialsId}"
 
                     // Check if the Terraform workspace exists
@@ -102,8 +100,15 @@ pipeline {
                     }
 
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: awsCredentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        sh 'terraform apply -auto-approve tfplan'
+                        sh 'terraform apply -auto-approve tfplan'    
                     }
+
+                    // Notify Slack about the successful apply
+                    slackSend(
+                        color: '#36a64f',
+                        message: "Terraform apply successful on branch ${env.BRANCH_NAME}",
+                        channel: SLACK_CHANNEL
+                    )
                 }
             }
         }
