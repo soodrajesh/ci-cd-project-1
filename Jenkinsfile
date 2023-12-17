@@ -21,10 +21,12 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh 'terraform init'
+                    // Include -input=false to automatically select the default option
+                    sh 'terraform init -input=false'
                 }
             }
         }
+
 
         stage('Terraform Select Workspace') {
             steps {
