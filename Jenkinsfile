@@ -21,10 +21,8 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    // Set TF_CLI_ARGS_init environment variable to disable input during init
-                    withEnv(['TF_CLI_ARGS_init=-input=false']) {
-                        sh 'terraform init'
-                    }
+                    // Answer "yes" to the state migration prompt during init
+                    sh 'echo "yes" | terraform init'
                 }
             }
         }
