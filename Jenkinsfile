@@ -116,45 +116,44 @@ pipeline {
     }
 
 post {
-        always {
-            // Notification for every build completion
-            slackSend(
-                color: '#36a64f',
-                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} completed",
-                channel: SLACK_CHANNEL
-            )
-            slackSend(
-                color: '#36a64f',
-                message: "GitHub build completed",
-                channel: SLACK_CHANNEL
-            )
-        }
+    always {
+        // Notification for every build completion
+        slackSend(
+            color: '#36a64f',
+            message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} completed.\nPipeline URL: ${env.BUILD_URL}",
+            channel: SLACK_CHANNEL
+        )
+        slackSend(
+            color: '#36a64f',
+            message: "GitHub build completed.\nPipeline URL: ${env.BUILD_URL}",
+            channel: SLACK_CHANNEL
+        )
+    }
 
-        failure {
-            // Notification for build failure
-            slackSend(
-                color: '#FF0000',
-                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed",
-                channel: SLACK_CHANNEL
-            )
-        }
+    failure {
+        // Notification for build failure
+        slackSend(
+            color: '#FF0000',
+            message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed.\nPipeline URL: ${env.BUILD_URL}",
+            channel: SLACK_CHANNEL
+        )
+    }
 
-        unstable {
-            // Notification for unstable build
-            slackSend(
-                color: '#FFA500',
-                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} is unstable",
-                channel: SLACK_CHANNEL
-            )
-        }
+    unstable {
+        // Notification for unstable build
+        slackSend(
+            color: '#FFA500',
+            message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} is unstable.\nPipeline URL: ${env.BUILD_URL}",
+            channel: SLACK_CHANNEL
+        )
+    }
 
-        aborted {
-            // Notification for aborted build
-            slackSend(
-                color: '#FFFF00',
-                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} aborted",
-                channel: SLACK_CHANNEL
-            )
-        }
+    aborted {
+        // Notification for aborted build
+        slackSend(
+            color: '#FFFF00',
+            message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} aborted.\nPipeline URL: ${env.BUILD_URL}",
+            channel: SLACK_CHANNEL
+        )
     }
 }
