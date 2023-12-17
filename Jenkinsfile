@@ -156,4 +156,5 @@ post {
             channel: SLACK_CHANNEL
         )
     }
+  }
 }
