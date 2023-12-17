@@ -8,7 +8,7 @@ pipeline {
         PROD_AWS_REGION = 'us-west-2'
         DEV_TF_WORKSPACE = 'development'
         PROD_TF_WORKSPACE = 'production'
-        SLACK_CHANNEL = 'github-alerts'
+        SLACK_CHANNEL = 'jenkins-alerts'
     }
 
     stages {
@@ -115,8 +115,9 @@ pipeline {
         }
     }
 
-    post {
+post {
         always {
+            // Notification for every build completion
             slackSend(
                 color: '#36a64f',
                 message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} completed",
@@ -125,6 +126,33 @@ pipeline {
             slackSend(
                 color: '#36a64f',
                 message: "GitHub build completed",
+                channel: SLACK_CHANNEL
+            )
+        }
+
+        failure {
+            // Notification for build failure
+            slackSend(
+                color: '#FF0000',
+                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} failed",
+                channel: SLACK_CHANNEL
+            )
+        }
+
+        unstable {
+            // Notification for unstable build
+            slackSend(
+                color: '#FFA500',
+                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} is unstable",
+                channel: SLACK_CHANNEL
+            )
+        }
+
+        aborted {
+            // Notification for aborted build
+            slackSend(
+                color: '#FFFF00',
+                message: "Jenkins build ${env.JOB_NAME} ${env.BUILD_NUMBER} aborted",
                 channel: SLACK_CHANNEL
             )
         }
