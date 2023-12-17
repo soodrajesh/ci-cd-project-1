@@ -3,6 +3,7 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 4.16"
+      region = "us-west-2"
     }
   }
 
@@ -11,7 +12,5 @@ terraform {
     key = "global/tfstate/terraform.tfstate"
     encrypt = true
     dynamodb_table = "demo-tf-state-lock"
-    region  = var.region
-    profile = var.aws_profile
     }
   }
