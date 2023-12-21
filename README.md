@@ -1,10 +1,10 @@
 # ci-cd-project-1
 
-# Jenkins Pipeline for Terraform deployment in AWS
+# Jenkins Pipeline for Terraform deployment in AWS 
 
 ## Overview
 
-This Jenkins pipeline script automates the Terraform deployment process with manual approval steps and Slack notifications.
+This Jenkins pipeline script automates the Terraform deployment process with manual Pull Request approval steps and Slack notifications.
 
 ## Prerequisites
 
