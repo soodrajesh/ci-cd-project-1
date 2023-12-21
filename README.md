@@ -6,7 +6,7 @@
 
 ## Overview
 
-This Jenkins pipeline script automates the Terraform deployment process with manual Pull Request approval steps and Slack notifications.
+This Jenkins pipeline script automates the Terraform deployment process with manual Git Pull Request approval steps and Slack notifications.
 
 ## Prerequisites
 
