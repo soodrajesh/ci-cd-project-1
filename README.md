@@ -2,6 +2,8 @@
 
 # Jenkins Pipeline for Terraform deployment in AWS 
 
+![Terraform Deployment](arch.png)
+
 ## Overview
 
 This Jenkins pipeline script automates the Terraform deployment process with manual Pull Request approval steps and Slack notifications.
